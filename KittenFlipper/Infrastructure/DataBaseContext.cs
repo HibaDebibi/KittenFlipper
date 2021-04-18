@@ -20,7 +20,7 @@ namespace KittenFlipper.Infrastructure
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             // connect to sql server database
-            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(Configuration.GetConnectionString(Constants.Constants.DefaultConnection));
         }
 
         public DbSet<User> Users { get; set; }

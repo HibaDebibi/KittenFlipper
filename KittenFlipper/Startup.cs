@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using AutoMapper;
 using KittenFlipper.Contracts;
+using KittenFlipper.Helpers;
 using KittenFlipper.Infrastructure;
 using KittenFlipper.Infrastructure.Jwt;
 using KittenFlipper.Services;
@@ -15,6 +17,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Polly;
+using Polly.Extensions.Http;
+
 namespace KittenFlipper
 {
     public class Startup
@@ -109,7 +114,13 @@ namespace KittenFlipper
                 });
             });
 
-            services.AddScoped<IUserService, UserService>();
+            //HTTP Client Factory
+            services.AddHttpClient(Constants.Constants.HttpClient)
+                  .ConfigureHttpClient(i => { i.BaseAddress = new Uri(Configuration[Constants.Constants.BaseAddress]); })
+                .AddPolicyHandler(GetRetryPolicy())
+                .AddPolicyHandler(GetCircuitBreakerPolicy());
+
+            ConfigureDependencyInjection(services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -146,6 +157,45 @@ namespace KittenFlipper
             {
                 endpoints.MapControllers();
             });
+        }
+
+        /// <summary>
+        /// Add dependency injections
+        /// </summary>
+        /// <param name="services"></param>
+        private void ConfigureDependencyInjection(IServiceCollection services)
+        {
+            // configure DI for application services
+            services.AddScoped<IUserService, UserService>();
+
+            services.AddTransient<IImageHandler, ImageHandler>();
+            services.AddTransient<IImageLoader, ImageLoader>();
+            services.AddTransient<IKittenFlipperService, KittenFlipperService>();
+        }
+
+        private IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+        {
+            return HttpPolicyExtensions
+              // Handle HttpRequestExceptions, 408 and 5xx status codes
+              .HandleTransientHttpError()
+              // Handle 404 not found
+              .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
+              // Handle 401 Unauthorized
+              .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+              // Handle 429 Too many requests
+              .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+              // What to do if any of the above erros occur:
+              // Retry 3 times, each time wait 1,2 and 4 seconds before retrying.
+              .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+        }
+
+        private IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+        {
+            //Further external requests are blocked for 30 seconds if five failed attempts occur sequentially.
+            //Circuit breaker policies are stateful.All calls through this client share the same circuit state.
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
         }
     }
 }
