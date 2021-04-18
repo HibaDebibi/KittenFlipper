@@ -2,8 +2,10 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using AutoMapper;
 using KittenFlipper.Contracts;
-using KittenFlipper.Helper.Jwt;
+using KittenFlipper.Infrastructure;
+using KittenFlipper.Infrastructure.Jwt;
 using KittenFlipper.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -27,7 +29,13 @@ namespace KittenFlipper
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<DataBaseContext>();
+            
+            services.AddCors();
+
             services.AddControllers();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
             var token = Configuration.GetSection("tokenManagement").Get<TokenManagement>();
             services.AddSingleton(token);
             services.AddAuthentication(x =>
@@ -61,6 +69,7 @@ namespace KittenFlipper
                         Name = @"Hiba Debibi"
                     }
                 });
+
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath, true);
@@ -123,6 +132,13 @@ namespace KittenFlipper
             });
 
             app.UseRouting();
+
+            // global cors policy
+            app.UseCors(x => x
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+
             app.UseAuthentication();
             app.UseAuthorization();
 

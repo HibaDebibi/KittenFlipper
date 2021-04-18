@@ -1,4 +1,4 @@
-﻿namespace KittenFlipper.Models
+﻿namespace KittenFlipper.Models.Login
 {
     public class LoginResult
     {

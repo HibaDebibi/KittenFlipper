@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 
-namespace KittenFlipper.Helper.BasicAuth
+namespace KittenFlipper.Infrastructure.BasicAuth
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class BasicAuthAttribute : TypeFilterAttribute

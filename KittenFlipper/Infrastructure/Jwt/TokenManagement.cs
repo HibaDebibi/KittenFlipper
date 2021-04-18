@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace KittenFlipper.Helper.Jwt
+namespace KittenFlipper.Infrastructure.Jwt
 {
     public class TokenManagement
     {
