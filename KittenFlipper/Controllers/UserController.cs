@@ -27,7 +27,7 @@ namespace KittenFlipper.Controllers
             _mapper = mapper;
             _logger = logger;
         }
-
+    
         /// <summary>
         /// Register a user : fill in the model
         /// </summary>

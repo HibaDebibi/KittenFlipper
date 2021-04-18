@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using KittenFlipper.Contracts;
 using KittenFlipper.Infrastructure.Jwt;
-using KittenFlipper.Models.Login;
+using KittenFlipper.Models.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -36,17 +36,17 @@ namespace KittenFlipper.Controllers
         /// <returns></returns>
         [AllowAnonymous]
         [HttpPost("login")]
-        public ActionResult Login([FromBody] LoginRequest request)
+        public ActionResult Login([FromBody] LoginModel request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest("Invalid Request");
             }
 
-            if (!_userService.IsValidUser(request.UserName, request.Password))
-            {
-                return BadRequest("Invalid Request");
-            }
+            var user = _userService.Authenticate(request.UserName, request.Password);
+
+            if (user == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
 
             var claims = new[]
             {
@@ -63,10 +63,14 @@ namespace KittenFlipper.Controllers
                 signingCredentials: credentials);
             var token = new JwtSecurityTokenHandler().WriteToken(jwtToken);
             _logger.LogInformation($"User [{request.UserName}] logged in the system.");
-            return Ok(new LoginResult
+            // return basic user info and authentication token
+            return Ok(new
             {
-                UserName = request.UserName,
-                JwtToken = token
+                Id = user.Id,
+                Username = user.Username,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Token = token
             });
         }
     }

@@ -55,7 +55,7 @@ namespace KittenFlipper.Infrastructure.BasicAuth
         public bool IsAuthorized(AuthorizationFilterContext context, string username, string password)
         {
             var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
-            return userService.IsValidUser(username, password);
+            return userService.Authenticate(username, password) != null;
         }
 
         private void ReturnUnauthorizedResult(AuthorizationFilterContext context)

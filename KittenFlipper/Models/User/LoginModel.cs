@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace KittenFlipper.Models.Login
+namespace KittenFlipper.Models.User
 {
-    public class LoginRequest
+    public class LoginModel
     {
         /// <summary>
         /// 
