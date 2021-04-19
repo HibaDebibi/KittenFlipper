@@ -31,6 +31,7 @@ namespace KittenFlipper.Controllers
         public async Task<IActionResult> GetAsync(int rotationType = 1)
         {
             byte[] imageBytes;
+            // read the explanation in readme
             if (rotationType <1 || rotationType > 16)
             {
                 return Content("Please enter rotation type between 1 and 16");
@@ -40,8 +41,6 @@ namespace KittenFlipper.Controllers
                 imageBytes = await _kittenFlipperService.RotateCatAsync(rotationType);
                 return File(imageBytes, "image/jpeg");
             }
-           
-            return File(imageBytes, "image/jpeg");
         }
 
         /// <summary>
@@ -62,8 +61,6 @@ namespace KittenFlipper.Controllers
                 imageBytes = await _kittenFlipperService.RotateCatAsync(rotationType);
                 return File(imageBytes, "image/jpeg");
             }
-
-            return File(imageBytes, "image/jpeg");
         }
     }
 }

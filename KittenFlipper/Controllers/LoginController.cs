@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using KittenFlipper.Contracts;
 using KittenFlipper.Infrastructure.Jwt;
 using KittenFlipper.Models.User;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -45,7 +47,7 @@ namespace KittenFlipper.Controllers
 
             var user = _userService.Authenticate(request.UserName, request.Password);
 
-            if (user == null)
+            if (user == null || user.Id == 0)
                 return BadRequest(new { message = "Username or password is incorrect" });
 
             var claims = new[]
@@ -72,6 +74,13 @@ namespace KittenFlipper.Controllers
                 LastName = user.LastName,
                 Token = token
             });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("logout")]
+        public void Logout()
+        {
+           // HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
     }
 }
